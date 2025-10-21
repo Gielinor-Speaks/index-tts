@@ -272,6 +272,55 @@ uv run webui.py -h
 
 Have fun!
 
+#### 🔌 REST API Server
+
+For programmatic access and integration with other applications, IndexTTS2 provides a comprehensive FastAPI server that exposes all webui features via a RESTful API.
+
+First, install the API dependencies:
+
+```bash
+uv sync --extra api
+```
+
+Then start the API server:
+
+```bash
+uv run api.py --fp16
+```
+
+The API will be available at `http://localhost:8000`. Visit `http://localhost:8000/docs` for interactive API documentation.
+
+> MP3 responses require the optional dependencies installed via `uv sync --extra api` and an FFmpeg binary available on your system `PATH`.
+
+**Quick Example:**
+
+```python
+import base64
+import requests
+
+# Load and encode speaker audio
+with open("speaker.wav", "rb") as f:
+    speaker_audio_b64 = base64.b64encode(f.read()).decode()
+
+# Generate speech
+response = requests.post(
+    "http://localhost:8000/synthesize",
+    json={
+        "text": "Hello, world!",
+        "speaker_audio": speaker_audio_b64,
+        "format": "wav"
+    }
+)
+
+# Save output
+result = response.json()
+audio_bytes = base64.b64decode(result["audio"])
+with open("output.wav", "wb") as f:
+    f.write(audio_bytes)
+```
+
+For complete API documentation, see [docs/API.md](docs/API.md).
+
 > [!IMPORTANT]
 > It can be very helpful to use **FP16** (half-precision) inference. It is faster
 > and uses less VRAM, with a very small quality loss.
