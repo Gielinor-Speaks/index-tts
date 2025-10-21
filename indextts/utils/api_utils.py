@@ -57,7 +57,7 @@ class TTSRequest(BaseModel):
         description="Text description of emotion"
     )
     emotion_weight: float = Field(
-        default=0.65,
+        default=0.6,
         ge=0.0,
         le=1.0,
         description="Emotion strength/alpha (0.0-1.0)"
