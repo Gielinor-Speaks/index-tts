@@ -183,13 +183,13 @@ async def synthesize_speech(request: TTSRequest):
 
         elif request.emotion_mode == EmotionMode.TEXT_DESCRIPTION:
             # Mode 3: Text-based emotion
-            if not request.emotion_text:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="emotion_text is required when emotion_mode=text_description",
-                )
+            # if not request.emotion_text:
+            #     raise HTTPException(
+            #         status_code=status.HTTP_400_BAD_REQUEST,
+            #         detail="emotion_text is required when emotion_mode=text_description",
+            #     )
             use_emo_text = True
-            emo_text = request.emotion_text
+            emo_text = request.emotion_text # If emotion_text is None, it will be inferred from the prompt string.
 
         # Create output file
         fd, output_wav_path = tempfile.mkstemp(suffix=".wav")
@@ -235,25 +235,25 @@ async def synthesize_speech(request: TTSRequest):
         )
 
         # Convert output if needed and encode to base64
-        final_output_path = convert_audio_file(output_wav_path, request.format)
+        final_output_path = convert_audio_file(output_wav_path, request.output_audio_format)
         if final_output_path not in temp_files:
             temp_files.append(final_output_path)
 
         audio_b64, duration, sample_rate = encode_audio_base64(
             final_output_path,
-            format=request.format,
+            format=request.output_audio_format,
         )
 
         return TTSResponse(
             audio=audio_b64,
-            format=request.format,
+            format=request.output_audio_format,
             duration=duration,
             inference_time_seconds=0.0,  # TODO: track actual inference time
             sample_rate=sample_rate,
             num_segments=num_segments,
             metadata={
                 "text_length": len(request.text),
-                "audio_format": request.format,
+                "audio_format": request.output_audio_format,
                 "model_version": "IndexTTSv2",
             }
         )

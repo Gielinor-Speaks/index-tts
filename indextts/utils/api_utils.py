@@ -54,7 +54,7 @@ class TTSRequest(BaseModel):
     )
     emotion_text: Optional[str] = Field(
         default=None,
-        description="Text description of emotion (required if emotion_mode=text_description)"
+        description="Text description of emotion"
     )
     emotion_weight: float = Field(
         default=0.65,
@@ -130,13 +130,9 @@ class TTSRequest(BaseModel):
     )
 
     # Output format
-    format: Literal["wav", "mp3", "flac"] = Field(
+    output_audio_format: Literal["wav", "mp3", "flac"] = Field(
         default="wav",
         description="Output audio format"
-    )
-    sample_rate: int = Field(
-        default=22050,
-        description="Output sample rate (Hz)"
     )
 
     @field_validator("emotion_vector")
@@ -273,6 +269,10 @@ def encode_audio_base64(audio_path: str, format: str = "wav") -> tuple[str, floa
 
     Returns:
         Tuple of (base64-encoded audio, duration in seconds, sample rate)
+
+    Note:
+        For MP3 format, the file should already be encoded at high quality (320kbps)
+        by convert_audio_file() before calling this function.
     """
     if format not in {"wav", "mp3", "flac"}:
         raise ValueError(f"Unsupported audio format: {format}")
@@ -332,7 +332,8 @@ def convert_audio_file(source_path: str, target_format: str) -> str:
                 "Install the API extras with `uv sync --extra api` and ensure FFmpeg is available."
             ) from exc
         segment = AudioSegment.from_file(source_path)
-        segment.export(target_path, format="mp3")
+        # Use 320kbps bitrate for high-quality MP3 output
+        segment.export(target_path, format="mp3", bitrate="320k")
     else:
         raise ValueError(f"Unsupported target format: {target_format}")
 
