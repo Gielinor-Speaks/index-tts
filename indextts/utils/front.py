@@ -133,7 +133,27 @@ class TextNormalizer:
         else:
             try:
                 text = re.sub(TextNormalizer.ENGLISH_CONTRACTION_PATTERN, r"\1 is", text, flags=re.IGNORECASE)
+
+                # Workaround: Protect "per X" phrases from being misinterpreted as units
+                # The TN library incorrectly converts "per day" to "per dalton y"
+                # We replace "per day/week/month/year/hour/minute/second" with hyphens temporarily
+                per_time_phrases = {
+                    'per day': 'per-day',
+                    'per week': 'per-week',
+                    'per month': 'per-month',
+                    'per year': 'per-year',
+                    'per hour': 'per-hour',
+                    'per minute': 'per-minute',
+                    'per second': 'per-second',
+                }
+                for phrase, replacement in per_time_phrases.items():
+                    text = re.sub(rf'\b{phrase}\b', replacement, text, flags=re.IGNORECASE)
+
                 result = self.en_normalizer.normalize(text)
+
+                # Restore the hyphens to spaces
+                for phrase, replacement in per_time_phrases.items():
+                    result = result.replace(replacement, phrase)
             except Exception:
                 result = text
                 print(traceback.format_exc())
