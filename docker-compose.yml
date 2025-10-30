@@ -1,0 +1,23 @@
+# Index TTS v2 - Local TTS Service
+services:
+  index-tts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: index-tts
+    ports:
+      - "8001:8001"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      # Mount model checkpoints (8.3GB - too large to bake into image)
+      - ./checkpoints:/app/checkpoints:ro
+    command: ["uv", "run", "api.py", "--port", "8001", "--cuda-kernel"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
